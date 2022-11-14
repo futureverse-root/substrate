@@ -33,7 +33,9 @@ where
 	use tokio::signal::unix::{signal, SignalKind};
 
 	let mut stream_int = signal(SignalKind::interrupt()).map_err(ServiceError::Io)?;
+	info!("👷🏻‍ Created int signal stream");
 	let mut stream_term = signal(SignalKind::terminate()).map_err(ServiceError::Io)?;
+	info!("👷🏻‍ Created term signal stream");
 
 	let t1 = stream_int.recv().fuse();
 	let t2 = stream_term.recv().fuse();
@@ -145,8 +147,11 @@ impl<C: SubstrateCli> Runner<C> {
 		E: std::error::Error + Send + Sync + 'static + From<ServiceError>,
 	{
 		self.print_node_infos();
+		info!("👷🏻‍ Printed node infos");
 		let mut task_manager = self.tokio_runtime.block_on(initialize(self.config))?;
+		info!("👷🏻‍ Initialized task manager");
 		let res = self.tokio_runtime.block_on(main(task_manager.future().fuse()));
+		info!("👷🏻‍ Completed node_run_until_exit");
 		Ok(res?)
 	}
 
