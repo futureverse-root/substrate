@@ -186,21 +186,23 @@ where
 	TExec: CodeExecutor + RuntimeVersionOf + Clone,
 {
 	let keystore_container = KeystoreContainer::new(&config.keystore)?;
-
+	log::info!("got keystore container");
 	let task_manager = {
 		let registry = config.prometheus_config.as_ref().map(|cfg| &cfg.registry);
 		TaskManager::new(config.tokio_handle.clone(), registry)?
 	};
+	log::info!("got task manager");
 
 	let chain_spec = &config.chain_spec;
 	let fork_blocks = get_extension::<ForkBlocks<TBl>>(chain_spec.extensions())
 		.cloned()
 		.unwrap_or_default();
+	log::info!("got fork blocks");
 
 	let bad_blocks = get_extension::<BadBlocks<TBl>>(chain_spec.extensions())
 		.cloned()
 		.unwrap_or_default();
-
+	log::info!("got bad blocks");
 	let (client, backend) = {
 		let db_config = sc_client_db::DatabaseSettings {
 			state_cache_size: config.state_cache_size,
@@ -209,14 +211,15 @@ where
 			source: config.database.clone(),
 			keep_blocks: config.keep_blocks,
 		};
-
+		log::info!("got db config");
 		let backend = new_db_backend(db_config)?;
-
+		log::info!("got backend");
 		let extensions = sc_client_api::execution_extensions::ExecutionExtensions::new(
 			config.execution_strategies.clone(),
 			Some(keystore_container.sync_keystore()),
 			sc_offchain::OffchainDb::factory_from_backend(&*backend),
 		);
+		log::info!("got extensions");
 
 		let wasm_runtime_substitutes = config
 			.chain_spec
@@ -234,7 +237,7 @@ where
 				Ok((number, c))
 			})
 			.collect::<Result<std::collections::HashMap<_, _>, Error>>()?;
-
+		log::info!("got wasm runtime substitutes");
 		let client = new_client(
 			backend.clone(),
 			executor,
@@ -256,7 +259,7 @@ where
 				wasm_runtime_substitutes,
 			},
 		)?;
-
+		log::info!("got client");
 		(client, backend)
 	};
 
