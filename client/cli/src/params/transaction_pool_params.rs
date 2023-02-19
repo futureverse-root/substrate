@@ -46,7 +46,7 @@ impl TransactionPoolParams {
 
 		// future queue
 		let factor = 10;
-		opts.future.count = self.pool_limit / factor;
+		opts.future.count = 5;
 		opts.future.total_bytes = self.pool_kbytes * 1024 / factor;
 
 		opts.ban_time = if let Some(ban_seconds) = self.tx_ban_seconds {
