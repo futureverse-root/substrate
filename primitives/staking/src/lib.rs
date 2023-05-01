@@ -54,6 +54,21 @@ impl<AccountId, Balance> OnStakerSlash<AccountId, Balance> for () {
 	}
 }
 
+/// Behavior for managing funds which pool over time, but are also intended to be used for rewards
+pub trait FeeRewards<AccountId, Balance, PositiveImbalance> {
+	/// Transfer from a source of funds if sufficient, else mint the amount. Creates an account if
+	/// non-existant. This is similar to deposit_creating in terms of the minting behavior and
+	/// account creation
+	fn from_pot_or_mint_creating(acc: &AccountId, amount: Balance) -> PositiveImbalance;
+	/// Transfer from a source of funds if sufficient, else mint the amount. Expects existing
+	/// account. This is similar to deposit_existing in terms of the minting behavior and account
+	/// existence requirement
+	fn from_pot_or_mint_into_existing(
+		acc: &AccountId,
+		amount: Balance,
+	) -> Result<PositiveImbalance, DispatchError>;
+}
+
 /// Trait for communication with the staking pallet.
 pub trait StakingInterface {
 	/// Balance type used by the staking system.

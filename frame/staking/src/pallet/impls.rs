@@ -37,7 +37,7 @@ use sp_runtime::{
 };
 use sp_staking::{
 	offence::{DisableStrategy, OffenceDetails, OnOffenceHandler},
-	EraIndex, SessionIndex, StakingInterface,
+	EraIndex, FeeRewards, SessionIndex, StakingInterface,
 };
 use sp_std::{collections::btree_map::BTreeMap, prelude::*};
 
@@ -234,19 +234,20 @@ impl<T: Config> Pallet<T> {
 		let dest = Self::payee(stash);
 		match dest {
 			RewardDestination::Controller => Self::bonded(stash)
-				.map(|controller| T::Currency::deposit_creating(&controller, amount)),
-			RewardDestination::Stash => T::Currency::deposit_into_existing(stash, amount).ok(),
+				.map(|controller| T::TrnRewards::from_pot_or_mint_creating(&controller, amount)),
+			RewardDestination::Stash =>
+				T::TrnRewards::from_pot_or_mint_into_existing(stash, amount).ok(),
 			RewardDestination::Staked => Self::bonded(stash)
 				.and_then(|c| Self::ledger(&c).map(|l| (c, l)))
 				.and_then(|(controller, mut l)| {
 					l.active += amount;
 					l.total += amount;
-					let r = T::Currency::deposit_into_existing(stash, amount).ok();
+					let r = T::TrnRewards::from_pot_or_mint_into_existing(stash, amount).ok();
 					Self::update_ledger(&controller, &l);
 					r
 				}),
 			RewardDestination::Account(dest_account) =>
-				Some(T::Currency::deposit_creating(&dest_account, amount)),
+				Some(T::TrnRewards::from_pot_or_mint_creating(&dest_account, amount)),
 			RewardDestination::None => None,
 		}
 	}

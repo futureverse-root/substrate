@@ -47,6 +47,7 @@ use frame_system::{
 };
 pub use node_primitives::{AccountId, Signature};
 use node_primitives::{AccountIndex, Balance, BlockNumber, Hash, Index, Moment};
+use pallet_balances::PositiveImbalance;
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
@@ -70,6 +71,7 @@ use sp_runtime::{
 	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, FixedPointNumber, FixedU128, Perbill, Percent, Permill, Perquintill,
 };
+use sp_staking::FeeRewards;
 use sp_std::prelude::*;
 #[cfg(any(feature = "std", test))]
 use sp_version::NativeVersion;
@@ -538,7 +540,22 @@ impl pallet_staking::BenchmarkingConfig for StakingBenchmarkingConfig {
 	type MaxValidators = ConstU32<1000>;
 }
 
+pub struct StakingFeeRewards;
+impl FeeRewards<AccountId, Balance, PositiveImbalance<Runtime>> for StakingFeeRewards {
+	fn from_pot_or_mint_creating(acc: &AccountId, amount: Balance) -> PositiveImbalance<Runtime> {
+		Balances::deposit_creating(acc, amount)
+	}
+
+	fn from_pot_or_mint_into_existing(
+		acc: &AccountId,
+		amount: Balance,
+	) -> Result<PositiveImbalance<Runtime>, sp_runtime::DispatchError> {
+		Balances::deposit_into_existing(acc, amount)
+	}
+}
+
 impl pallet_staking::Config for Runtime {
+	type TrnRewards = StakingFeeRewards;
 	type MaxNominations = MaxNominations;
 	type Currency = Balances;
 	type CurrencyBalance = Balance;

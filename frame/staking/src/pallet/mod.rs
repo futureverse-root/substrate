@@ -32,7 +32,7 @@ use sp_runtime::{
 	traits::{CheckedSub, SaturatedConversion, StaticLookup, Zero},
 	Perbill, Percent,
 };
-use sp_staking::{EraIndex, SessionIndex};
+use sp_staking::{EraIndex, FeeRewards, SessionIndex};
 use sp_std::{cmp::max, prelude::*};
 
 mod impls;
@@ -74,6 +74,11 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + SendTransactionTypes<Call<Self>> {
+		type TrnRewards: FeeRewards<
+			Self::AccountId,
+			Self::CurrencyBalance,
+			PositiveImbalanceOf<Self>,
+		>;
 		/// The staking balance.
 		type Currency: LockableCurrency<
 			Self::AccountId,
