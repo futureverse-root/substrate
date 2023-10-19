@@ -236,7 +236,7 @@ impl sp_inherents::InherentDataProvider for InherentDataProvider {
 		// TRN HOTFIX: mutate timestamp to make it revert back in time and have slots
 		// happen at 6x their speed from then until we have caught up with the present time.
 
-		const REVIVE_TIMESTAMP: u64 = 1697696100000; // Thurs 19, Oct 2023 7.15pm NZT
+		const REVIVE_TIMESTAMP: u64 = 1697697000000; // Thurs 19, Oct 2023 7.30pm NZT
 		const FORK_TIMESTAMP: u64 = 1697575576000; // Block number 8,260,344 18/10/2023, 07:46:16
 		const WARP_FACTOR: u64 = 2;
 
