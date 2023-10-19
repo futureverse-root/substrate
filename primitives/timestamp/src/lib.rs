@@ -221,7 +221,7 @@ impl InherentDataProvider {
 		let timestamp = timestamp.min(warped_timestamp);
 		Self {
 			max_drift: std::time::Duration::from_secs(60).into(),
-			timestamp,
+			timestamp: timestamp.into(),
 		}
 	}
 
