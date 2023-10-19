@@ -23,6 +23,9 @@ use codec::{Decode, Encode};
 use sp_inherents::{InherentData, InherentIdentifier, IsFatalError};
 use sp_std::time::Duration;
 
+#[cfg(feature = "std")]
+use log::trace;
+
 /// The identifier for the `timestamp` inherent.
 pub const INHERENT_IDENTIFIER: InherentIdentifier = *b"timstap0";
 
@@ -232,7 +235,7 @@ impl sp_inherents::InherentDataProvider for InherentDataProvider {
 		&self,
 		inherent_data: &mut InherentData,
 	) -> Result<(), sp_inherents::Error> {
-		let timestamp = self.timestamp;
+		let timestamp = self.timestamp.as_millis();
 		// TRN HOTFIX: mutate timestamp to make it revert back in time and have slots
 		// happen at 6x their speed from then until we have caught up with the present time.
 
