@@ -179,6 +179,17 @@ impl TimestampInherentData for InherentData {
 	}
 }
 
+/// The current timestamp using the system time.
+///
+/// This timestamp is the time since the UNIX epoch.
+#[cfg(feature = "std")]
+fn current_timestamp() -> std::time::Duration {
+	use std::time::SystemTime;
+	let now = SystemTime::now();
+	now.duration_since(SystemTime::UNIX_EPOCH)
+		.expect("Current time is always after unix epoch; qed")
+}
+
 /// Provide duration since unix epoch in millisecond for timestamp inherent.
 #[cfg(feature = "std")]
 pub struct InherentDataProvider {
@@ -190,9 +201,27 @@ pub struct InherentDataProvider {
 impl InherentDataProvider {
 	/// Create `Self` while using the system time to get the timestamp.
 	pub fn from_system_time() -> Self {
+		let timestamp = current_timestamp().as_millis() as u64;
+
+		// TRN HOTFIX: mutate timestamp to make it revert back in time and have slots
+		// happen at 6x their speed from then until we have caught up with the present time.
+
+		const REVIVE_TIMESTAMP: u64 = 1697708700000; // Thurs 19, Oct 2023 10.45pm NZT
+		const FORK_TIMESTAMP: u64 = 1697575576000; // Block number 8,260,344 18/10/2023, 07:46:16
+		const WARP_FACTOR: u64 = 2;
+
+		let time_since_revival = timestamp.saturating_sub(REVIVE_TIMESTAMP);
+		let warped_timestamp = FORK_TIMESTAMP + WARP_FACTOR * time_since_revival;
+
+		trace!(target: "babe", "timestamp warped: {:?} to {:?} ({:?} since revival)", timestamp, warped_timestamp, time_since_revival);
+
+		// we want to ensure our timestamp is such that slots run monotonically with blocks
+		// at 1/6th of the slot_duration from this slot onwards until we catch up to the
+		// wall-clock time.
+		let timestamp = timestamp.min(warped_timestamp);
 		Self {
 			max_drift: std::time::Duration::from_secs(60).into(),
-			timestamp: Timestamp::current(),
+			timestamp,
 		}
 	}
 
@@ -235,25 +264,7 @@ impl sp_inherents::InherentDataProvider for InherentDataProvider {
 		&self,
 		inherent_data: &mut InherentData,
 	) -> Result<(), sp_inherents::Error> {
-		let timestamp = self.timestamp.as_millis() as u64;
-		// TRN HOTFIX: mutate timestamp to make it revert back in time and have slots
-		// happen at 6x their speed from then until we have caught up with the present time.
-
-		const REVIVE_TIMESTAMP: u64 = 1697707800000; // Thurs 19, Oct 2023 10.30pm NZT
-		const FORK_TIMESTAMP: u64 = 1697575576000; // Block number 8,260,344 18/10/2023, 07:46:16
-		const WARP_FACTOR: u64 = 2;
-
-		let time_since_revival = timestamp.saturating_sub(REVIVE_TIMESTAMP);
-		let warped_timestamp = FORK_TIMESTAMP + WARP_FACTOR * time_since_revival;
-
-		trace!(target: "babe", "timestamp warped: {:?} to {:?} ({:?} since revival)", timestamp, warped_timestamp, time_since_revival);
-
-		// we want to ensure our timestamp is such that slots run monotonically with blocks
-		// at 1/6th of the slot_duration from this slot onwards until we catch up to the
-		// wall-clock time.
-		let timestamp = timestamp.min(warped_timestamp);
-
-		inherent_data.put_data(INHERENT_IDENTIFIER, &timestamp)
+		inherent_data.put_data(INHERENT_IDENTIFIER, &self.timestamp)
 	}
 
 	async fn try_handle_error(
