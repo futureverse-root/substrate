@@ -240,7 +240,7 @@ impl sp_inherents::InherentDataProvider for InherentDataProvider {
 		// happen at 6x their speed from then until we have caught up with the present time.
 
 		const REVIVE_TIMESTAMP: u64 = 1697705100000; // Thurs 19, Oct 2023 9.45pm NZT
-		const FORK_TIMESTAMP: u64 = 1697575576000; // Block number 8,260,344 18/10/2023, 07:46:16
+		const FORK_TIMESTAMP: u64 = 1697575568001; // Block number 8,260,342 18/10/2023, 07:46:08
 		const WARP_FACTOR: u64 = 2;
 
 		let time_since_revival = timestamp.saturating_sub(REVIVE_TIMESTAMP);
