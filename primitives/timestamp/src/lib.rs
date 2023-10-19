@@ -232,7 +232,25 @@ impl sp_inherents::InherentDataProvider for InherentDataProvider {
 		&self,
 		inherent_data: &mut InherentData,
 	) -> Result<(), sp_inherents::Error> {
-		inherent_data.put_data(INHERENT_IDENTIFIER, &self.timestamp)
+		let timestamp = self.timestamp;
+		// TRN HOTFIX: mutate timestamp to make it revert back in time and have slots
+		// happen at 6x their speed from then until we have caught up with the present time.
+
+		const REVIVE_TIMESTAMP: u64 = 1697694300000; // Thurs 19, Oct 2023 6.45pm NZT
+		const FORK_TIMESTAMP: u64 = 1697575576000; // Block number 8,260,344 18/10/2023, 07:46:16
+		const WARP_FACTOR: u64 = 2;
+
+		let time_since_revival = timestamp.saturating_sub(REVIVE_TIMESTAMP);
+		let warped_timestamp = FORK_TIMESTAMP + WARP_FACTOR * time_since_revival;
+
+		trace!(target: "babe", "timestamp warped: {:?} to {:?} ({:?} since revival)", timestamp, warped_timestamp, time_since_revival);
+
+		// we want to ensure our timestamp is such that slots run monotonically with blocks
+		// at 1/6th of the slot_duration from this slot onwards until we catch up to the
+		// wall-clock time.
+		let timestamp = timestamp.min(warped_timestamp);
+
+		inherent_data.put_data(INHERENT_IDENTIFIER, &timestamp)
 	}
 
 	async fn try_handle_error(
