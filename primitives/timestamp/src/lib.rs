@@ -208,7 +208,7 @@ impl InherentDataProvider {
 
 		const REVIVE_TIMESTAMP: u64 = 1697712300000; // Thurs 19, Oct 2023 11.45pm NZT
 		const FORK_TIMESTAMP: u64 = 1697575576000; // Block number 8,260,344 18/10/2023, 07:46:16
-		const WARP_FACTOR: u64 = 2;
+		const WARP_FACTOR: u64 = 8;
 
 		let time_since_revival = timestamp.saturating_sub(REVIVE_TIMESTAMP);
 		let warped_timestamp = FORK_TIMESTAMP + WARP_FACTOR * time_since_revival;
