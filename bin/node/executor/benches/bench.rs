@@ -117,7 +117,6 @@ fn construct_block<E: Externalities>(
 			&runtime_code,
 			"Core_initialize_block",
 			&header.encode(),
-			true,
 			CallContext::Offchain,
 		)
 		.0
@@ -130,7 +129,6 @@ fn construct_block<E: Externalities>(
 				&runtime_code,
 				"BlockBuilder_apply_extrinsic",
 				&i.encode(),
-				true,
 				CallContext::Offchain,
 			)
 			.0
@@ -144,7 +142,6 @@ fn construct_block<E: Externalities>(
 				&runtime_code,
 				"BlockBuilder_finalize_block",
 				&[0u8; 0],
-				true,
 				CallContext::Offchain,
 			)
 			.0
@@ -190,10 +187,6 @@ fn bench_execute_block(c: &mut Criterion) {
 	for strategy in execution_methods {
 		group.bench_function(format!("{:?}", strategy), |b| {
 			let genesis_config = node_testing::genesis::config(Some(compact_code_unwrap()));
-			let use_native = match strategy {
-				ExecutionMethod::Native => true,
-				ExecutionMethod::Wasm(..) => false,
-			};
 
 			let executor =
 				NativeElseWasmExecutor::new_with_wasm_executor(WasmExecutor::builder().build());
@@ -221,7 +214,6 @@ fn bench_execute_block(c: &mut Criterion) {
 								&runtime_code,
 								"Core_execute_block",
 								&block.0,
-								use_native,
 								CallContext::Offchain,
 							)
 							.0
