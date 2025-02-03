@@ -1772,8 +1772,6 @@ async fn grandpa_environment_uses_round_base_block_for_voting_if_finality_target
 	let peer = net.peer(0);
 	let network_service = peer.network_service().clone();
 	let sync_service = peer.sync_service().clone();
-	let notification_service =
-		peer.take_notification_service(&grandpa_protocol_name::NAME.into()).unwrap();
 	let link = peer.data.lock().take().unwrap();
 	let client = peer.client().as_client().clone();
 	let select_chain = sc_consensus::LongestChain::new(peer.client().as_backend());
@@ -1786,7 +1784,6 @@ async fn grandpa_environment_uses_round_base_block_for_voting_if_finality_target
 		None,
 		network_service.clone(),
 		sync_service,
-		notification_service,
 		select_chain.clone(),
 		VotingRulesBuilder::default().build(),
 	);
